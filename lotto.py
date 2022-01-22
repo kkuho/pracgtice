@@ -8,3 +8,5 @@ for i in range(5):
     shuffle(num)
     lotto_num = sample(num, 6)
     print(lotto_num)
+
+print("Hello master?")

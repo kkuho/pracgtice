@@ -61,8 +61,8 @@ while True:
             mid = datetime.datetime(now.year, now.month, now.day) + datetime.timedelta(1)
             #sell_crypto_currency(ticker_input)
         
-        if (current_price > target_price) and (current_price > ma5):
-            pass
+        elif (current_price > target_price) and (current_price > ma5):
+            print("가즈아아아!~~~")
   
             #buy_crypto_currency(ticker_input)
         else:

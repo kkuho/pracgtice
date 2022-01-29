@@ -45,7 +45,7 @@ def get_yesterday_ma5(ticker): # 5일 평균선
 
 now = datetime.datetime.now()
 mid = datetime.datetime(now.year, now.month, now.day) + datetime.timedelta(1) # 자정 시간을 구하는 함수 식
-ticker_input = input("원하는 ticker를 입력하세요")
+ticker_input = input("원하는 ticker를 입력하세요 : ")
 ma5 = get_yesterday_ma5(ticker_input)
 target_price = get_target_price(ticker_input) # 이 코드 실행할 때 target 가격을 계산
 

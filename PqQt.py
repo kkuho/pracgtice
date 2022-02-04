@@ -61,11 +61,20 @@ class MyWindow(QMainWindow, form_class):
         self.statusBar().showMessage(str_time) # 시간을 window 창에 출력하는 함수
         
         price = pyupbit.get_current_price(ticker_input)
+        if (price > target_price) and (price > ma5):
+            sayho = "가즈아아아아!!!"
+            
+        else:
+            sayho = "기다려!!!"
+
+
         self.lineEdit.setText(str(format(price, ','))) # lineEdit 에 price 문자열 값 출력
         self.lineEdit_2.setText(str(format(target_price, ',')))
         self.lineEdit_3.setText(str(format(ma5, ',')))
         self.lineEdit_4.setText(ticker_input)
         self.lineEdit_5.setText(str(format(balance, ',')))
+        self.lineEdit_6.setText(sayho)
+
 
 app = QApplication(sys.argv)
 window = MyWindow()

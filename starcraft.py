@@ -154,7 +154,7 @@ print("[알람] 탱크 시즈 모드 개발이 완료되었습니다.")
 
 # 공격 모드 준비 (마린 : 스팀팩, 탱크 : 시즈모드, 레이스 : 클로킹)
 for unit in attack_units:
-  if isinstance(unit, Marine):
+  if isinstance(unit, Marine): # isinstance : unit이라는 객체가 Marine이라는 class의 instance 즉 객체이냐? 
     unit.stimpack()
   elif isinstance(unit, Tank):
     unit.set_seize_mode()
@@ -165,7 +165,7 @@ for unit in attack_units:
 for unit in attack_units:
   unit.attack("1시")
 
-# 전군 피해
+# 아군 피해
 for unit in attack_units:
   unit.damaged(randint(5, 100)) # 랜덤으로 공격을 받음
 

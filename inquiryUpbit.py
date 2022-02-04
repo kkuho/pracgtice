@@ -22,18 +22,19 @@ def get_target_price(ticker): # 변동성 돌파 구간 계산
     return target
 
 def buy_crypto_currency(ticker): # 매수
-    krw = upbit.get_balance() # 예수금 확인
+    krw = upbit.get_balance()-1000 # 예수금 확인
     orderbook = pyupbit.get_orderbook(ticker)
 
     asks = orderbook['orderbook_units']
     sell_price = asks[0]['ask_price']
     unit = krw / float(sell_price) # float 은 실수형으로 만들어주는 함수
-    upbit.buy_market_order(ticker, unit) # 현재 시장가로 구매 가능한 수량을 구매 ! 주의!! 실행하는 순간 매수됨
-    
+    buy = upbit.buy_market_order(ticker, krw) # 현재 시장가로 구매 가능한 수량을 구매 ! 주의!! 실행하는 순간 매수됨
+    print(buy)
 
 def sell_crypto_currency(ticker): # 매도 
     unit_sell = upbit.get_balance(ticker)
     upbit.sell_market_order(ticker, unit_sell)
+    
 
 
 def get_yesterday_ma5(ticker): # 5일 평균선 
@@ -53,22 +54,24 @@ while True:
     try:
         now = datetime.datetime.now()
         current_price = pyupbit.get_current_price(ticker_input)
+        krw = upbit.get_balance()
         if mid < now < mid + datetime.timedelta(seconds=10): # 정각에서 10초 내에 있을 때 자정으로 간주함
             print("정각입니다!!")
             target_price = get_target_price(ticker_input)
             ma5 = get_yesterday_ma5(ticker_input)
             now = datetime.datetime.now()
             mid = datetime.datetime(now.year, now.month, now.day) + datetime.timedelta(1)
-            #sell_crypto_currency(ticker_input)
+            sell_crypto_currency(ticker_input)
         
-        elif (current_price > target_price) and (current_price > ma5):
+        elif (current_price > target_price) and (current_price > ma5) and (krw >1000):
+            
             print("가즈아아아!~~~")
-  
-            #buy_crypto_currency(ticker_input)
+            buy_crypto_currency(ticker_input)
+
         else:
             print(now, "|", "현재가 : " , current_price, "|", "목표가 : ", target_price, "|",  "5일선 평균가 : ", ma5)
         
-
+ 
     except:
         print("에러 발생")
         

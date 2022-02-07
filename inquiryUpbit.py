@@ -1,4 +1,4 @@
-# from xml.dom.minidom import parseString
+
 import pyupbit
 import time
 import datetime
@@ -45,7 +45,7 @@ def get_yesterday_ma5(ticker): # 5일 평균선
     ma = close.rolling(5).mean()
     return ma[-2]
 
-def write_trade(trade):
+def write_trade(trade): # trade 정보를 엑셀로 기록하는 함수
     print(trade)
     wb = load_workbook('upbitRecord.xlsx')
     ws = wb[wb.sheetnames[0]]
@@ -71,26 +71,42 @@ def write_trade(trade):
     ws.append(row)
     wb.save('upbitRecord.xlsx')
 
+def write_target(ticker_input, target_price, ma5, now): # trade 정보를 엑셀로 기록하는 함수
+    
+    wb = load_workbook('upbitRecord.xlsx')
+    ws = wb[wb.sheetnames[1]]
+    row = []
+
+    row.append(ticker_input)
+    row.append(target_price)
+    row.append(ma5)
+    row.append(now)
+
+    ws.append(row)
+    wb.save('upbitRecord.xlsx')
 
 now = datetime.datetime.now()
-mid = datetime.datetime(now.year, now.month, now.day) + datetime.timedelta(1) # 자정 시간을 구하는 함수 식
+mid = datetime.datetime(now.year, now.month, now.day) + datetime.timedelta(hours=33) # 다음 날 9시를 구하는 함수
 ticker_input = input("원하는 ticker를 입력하세요 : ")
 ma5 = get_yesterday_ma5(ticker_input)
 target_price = get_target_price(ticker_input) # 이 코드 실행할 때 target 가격을 계산
+current_price = pyupbit.get_current_price(ticker_input)
+
+write_target(ticker_input, target_price, ma5, now)
 
 while True:
     try:
         now = datetime.datetime.now()
         current_price = pyupbit.get_current_price(ticker_input)
         krw = upbit.get_balance()
-        ma5 = get_yesterday_ma5(ticker_input)
-        target_price = get_target_price(ticker_input)
-        if mid < now < mid + datetime.timedelta(seconds=10): # 정각에서 10초 내에 있을 때 자정으로 간주함
+        #ma5 = get_yesterday_ma5(ticker_input)
+        #target_price = get_target_price(ticker_input)
+        if mid < now < mid + datetime.timedelta(seconds=10): # 9시에서 10초 내에 있을 때 9시로 간주함
             print("정각입니다!!")
             target_price = get_target_price(ticker_input)
             ma5 = get_yesterday_ma5(ticker_input)
             now = datetime.datetime.now()
-            mid = datetime.datetime(now.year, now.month, now.day) + datetime.timedelta(1)
+            mid = datetime.datetime(now.year, now.month, now.day) + datetime.timedelta(hours=33)
             trade = sell_crypto_currency(ticker_input)
             write_trade(trade)
         

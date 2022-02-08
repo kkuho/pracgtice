@@ -99,8 +99,7 @@ while True:
         now = datetime.datetime.now()
         current_price = pyupbit.get_current_price(ticker_input)
         krw = upbit.get_balance()
-        #ma5 = get_yesterday_ma5(ticker_input)
-        #target_price = get_target_price(ticker_input)
+        
         if mid < now < mid + datetime.timedelta(seconds=10): # 9시에서 10초 내에 있을 때 9시로 간주함
             print("정각입니다!!")
             target_price = get_target_price(ticker_input)
@@ -109,12 +108,14 @@ while True:
             mid = datetime.datetime(now.year, now.month, now.day) + datetime.timedelta(hours=33)
             trade = sell_crypto_currency(ticker_input)
             write_trade(trade)
+            write_target(ticker_input, target_price, ma5, now)
         
         elif (current_price > target_price) and (current_price > ma5) and (krw >1000):
             
             print("가즈아아아!~~~")
             trade = buy_crypto_currency(ticker_input)
             write_trade(trade)
+            write_target(ticker_input, target_price, ma5, now)
 
         else:
             print(now, "|", "현재가 : " , current_price, "|", "목표가 : ", target_price, "|",  "5일선 평균가 : ", ma5)

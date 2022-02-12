@@ -110,7 +110,8 @@ def write_target(ticker_input, target_price, ma5, curtime): # trade 정보를 �
     wb.save('upbitRecord.xlsx')
 
 curtime = datetime.datetime.now()
-reset_time = datetime.datetime.now() + datetime.timedelta(minutes=1) # 다음 날 9시를 구하는 함수
+reset_time = datetime.datetime.now() + datetime.timedelta(minutes=60) # 다음 날 9시를 구하는 함수
+
 ticker_input = get_tickers(tickers)[0][0]
 
 print(ticker_input)
@@ -144,7 +145,7 @@ while True:
             ma5 = get_yesterday_ma5(ticker_input)
             current_price = pyupbit.get_current_price(ticker_input)
             curtime = datetime.datetime.now()
-            reset_time = datetime.datetime.now() + datetime.timedelta(minutes=1)
+            reset_time = datetime.datetime.now() + datetime.timedelta(minutes=60)
 
 
         if (current_price > target_price) and (current_price > ma5) and (krw >1000):

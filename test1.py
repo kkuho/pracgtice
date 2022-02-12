@@ -10,18 +10,17 @@ with open("djqqlxm.txt") as f: # upbit login
     secret = lines[1].strip()
     upbit = pyupbit.Upbit(key, secret)
 
-global coinlist
+global coinlist, sortlist
 
 tickers = pyupbit.get_tickers(fiat="KRW")
-curtime = datetime.datetime.now()
 coinlist = []
 
 def get_tickers(tickers):
 
     curtime = datetime.datetime.now()
     
-    for item in tickers :
-        h_itemlists_prev = pyupbit.get_ohlcv(item, interval="minute10", count=10).drop_duplicates()
+    for item in tickers:
+        h_itemlists_prev = pyupbit.get_ohlcv(item, interval="minute60", count=10).drop_duplicates()
         h_itemlists = h_itemlists_prev.reset_index().sort_values(by="index", ascending=False) # ticker의 ohlcv 값을 index를 reset해서 내림차순으로 정렬
         #print(h_itemlists)
 
@@ -33,12 +32,12 @@ def get_tickers(tickers):
     
     sortlist = sorted(coinlist, key=lambda x:x[5], reverse= True) # 거래금액이 큰 순으로 정렬
 
-    return sortlist[1:11] # 10개 ticker만 return함
+    return sortlist[0:11] # 10개 ticker만 return함
 
 
 def get_target_price(ticker): # 변동성 돌파 구간 계산 
 
-    df = pyupbit.get_ohlcv(ticker)
+    df = pyupbit.get_ohlcv(ticker, interval='minute60')
     yesterday = df.iloc[-2]
 
     today_open = yesterday['close']
@@ -49,18 +48,15 @@ def get_target_price(ticker): # 변동성 돌파 구간 계산
     return target
 
 def get_yesterday_ma5(ticker): # 5일 평균선 
-    df = pyupbit.get_ohlcv(ticker)
+    df = pyupbit.get_ohlcv(ticker, interval='minute60')
     close = df['close']
     ma = close.rolling(5).mean()
     return ma[-2]
 
 def buy_crypto_currency(ticker): # 매수
     krw = upbit.get_balance()*0.999 # 예수금 확인
-    # orderbook = pyupbit.get_orderbook(ticker)
-    # asks = orderbook['orderbook_units']
-    # buy_price = asks[0]['ask_price']
-    # unit = krw / float(buy_price) # float 은 실수형으로 만들어주는 함수
-    buy = upbit.buy_market_order(ticker, krw) # 현재 시장가로 구매 가능한 수량을 구매 ! 주의!! 실행하는 순간 매수됨
+    money = 10000
+    buy = upbit.buy_market_order(ticker, money) # 현재 시장가로 구매 가능한 수량을 구매 ! 주의!! 실행하는 순간 매수됨
     return buy
 
 def sell_crypto_currency(ticker): # 매도 
@@ -85,17 +81,13 @@ def write_trade(trade): # trade 정보를 엑셀로 기록하는 함수
         row.append('매도')
         row.append(trade['volume'])
         row.append(trade['uuid'])
-        row.append(bal[1]['avg_buy_price'])
-        row.append(bal[1]['balance']) 
-
+        
     else : 
         row.append('매수') 
         row.append(trade['price'])
         row.append(trade['uuid'])
-        row.append(bal[1]['avg_buy_price'])
-        row.append(bal[1]['balance'])
-        
-
+     
+   
     ws.append(row)
     wb.save('upbitRecord.xlsx')
 
@@ -114,58 +106,86 @@ def write_target(ticker_input, target_price, ma5, curtime): # trade 정보를 �
     wb.save('upbitRecord.xlsx')
 
 curtime = datetime.datetime.now()
-am9 = datetime.datetime.now() + datetime.timedelta(minutes=2) # 다음 날 9시를 구하는 함수
-ticker_input = get_tickers(tickers)[0][0]
-print(ticker_input)
+reset_time = datetime.datetime.now() + datetime.timedelta(minutes=60) # 다음 날 9시를 구하는 함수
 
-ma5 = get_yesterday_ma5(ticker_input)
-target_price = get_target_price(ticker_input) # 이 코드 실행할 때 target 가격을 계산
-current_price = pyupbit.get_current_price(ticker_input)
+# print(ticker_input)
 
-write_target(ticker_input, target_price, ma5, curtime)
+# ma5 = get_yesterday_ma5(ticker_input)
+# target_price = get_target_price(ticker_input) # 이 코드 실행할 때 target 가격을 계산
+# current_price = pyupbit.get_current_price(ticker_input)
+
+# write_target(ticker_input, target_price, ma5, curtime)
 
 while True:
-    try:
+    try :
         curtime = datetime.datetime.now()
-        current_price = pyupbit.get_current_price(ticker_input)
+        #current_price = pyupbit.get_current_price(ticker_input)
         krw = upbit.get_balance()
         myval = upbit.get_balances()
-        bought_coin = False
+        coinlist.clear()
 
-        if am9 < curtime < am9 + datetime.timedelta(seconds=10): # 9시에서 10초 내에 있을 때 9시로 간주함
-            print("Update!!")
-            ticker_input = get_tickers(tickers)[0][0]
-            target_price = get_target_price(ticker_input)
-            ma5 = get_yesterday_ma5(ticker_input)
-            curtime = datetime.datetime.now()
-            am9 = datetime.datetime(curtime.year, curtime.month, curtime.day) + datetime.timedelta(hours=33)
+        for i in range(len(myval)):
+            avaTicker = 'KRW-' + myval[i]['currency']
+            if myval[i]['currency'] != 'KRW' and pyupbit.get_current_price(avaTicker) > float(myval[i]['avg_buy_price']) * 1.03 :
+                
+                trade = sell_crypto_currency(avaTicker)
+                write_trade(trade)
 
+            else : 
+                pass
 
-        if (current_price > target_price) and (current_price > ma5) and (krw >1000):
+        for item in tickers:
             
-            print("가즈아아아!~~~")
-            trade = buy_crypto_currency(ticker_input)
-            bought_coin = True
+            h_itemlists_prev = pyupbit.get_ohlcv(item, interval="minute60", count=10).drop_duplicates()
+            h_itemlists = h_itemlists_prev.reset_index().sort_values(by="index", ascending=False) 
+            # ticker의 ohlcv 값을 index를 reset해서 내림차순으로 정렬
 
-            write_trade(trade)
-            write_target(ticker_input, target_price, ma5, curtime)
+            if( (h_itemlists.head(1)['index'].item().hour)%24 == curtime.hour) : # 첫번째 기록의 now date기록 중에 시간만 추출해서 지금 시간과 같다면
 
-        # 현재가가 매수 평균가보다 3% 이상일 때 매도
+                coinlist.append([ item, 'null', 0, 0, curtime, h_itemlists.iloc[1]['value'] ]) 
+                # 두번째 데이터를 기록하네?? 왜?? 암튼 ticker별로 총거래금액을 기록
+                
+            time.sleep(0.2)
         
-        if bought_coin == True and (current_price > float(myval[1]['avg_buy_price']) * 1.03) :
-            trade = sell_crypto_currency(ticker_input)
-            bought_coin = False
-            write_trade(trade)
-        
+            sortlist = sorted(coinlist, key=lambda x:x[5], reverse= True)        
 
-        else:
-            print(curtime, "|", "Ticker : ", ticker_input ,"| 현재가 : " , current_price, "|", "목표가 : ", target_price, "|",  "5일선 평균가 : ", ma5)
+
+        for idx, ticker_input in enumerate(sortlist[0:11]) :
+
+            current_price = pyupbit.get_current_price(ticker_input[0])
+            target_price = get_target_price(ticker_input[0])
+            ma5 = get_yesterday_ma5(ticker_input[0])
+            curtime = datetime.datetime.now()
+
+            # if reset_time < curtime < reset_time + datetime.timedelta(seconds=10): # 9시에서 10초 내에 있을 때 9시로 간주함
+            #     print("Update!!")
+                
+            #     target_price = get_target_price(ticker_input[0])
+            #     ma5 = get_yesterday_ma5(ticker_input[0])
+            #     current_price = pyupbit.get_current_price(ticker_input[0])
+            #     curtime = datetime.datetime.now()
+            #     reset_time = datetime.datetime.now() + datetime.timedelta(minutes=60)
+
+
+            if (current_price > target_price) and (current_price > ma5) and (krw >=5000):
+                
+                print("가즈아아아!~~~")
+                trade = buy_crypto_currency(ticker_input[0])
+                
+                write_trade(trade)
+                write_target(ticker_input[0], target_price, ma5, curtime)
+
+            # 현재가가 매수 평균가보다 3% 이상일 때 매도
+            
+            else:
+                print(curtime, "|", "Ticker : ", ticker_input[0] ,"| 현재가 : " , current_price, "|", "목표가 : ", target_price, "|",  "5일선 평균가 : ", ma5)
+            time.sleep(0.2)
         
  
     except:
         print("에러 발생")
         
-    time.sleep(1)
+    time.sleep(0.1)
     
         
 

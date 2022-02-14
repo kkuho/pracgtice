@@ -177,7 +177,7 @@ while True:
                 write_trade(trade)
                 write_target(ticker_input, target_price, ma5, curtime, baseprice)
 
-                for i in range(1, 10):
+                for i in range(1, 9):
                     subgetprice = 0
 
                     if(len(str(gaptick).split('.')) > 1) : # gaptick에 소수점이 있다면,
@@ -185,13 +185,13 @@ while True:
                     else : 
                         subgetprice = round(askprice - gaptick*i)
 
-                    subamount = round(baseprice / askprice, 8 ) #지정가 구매 수량 정하기
+                    subamount = round(baseprice / subgetprice, 8 ) #지정가 구매 수량 정하기
                     ret = upbit.buy_limit_order(ticker_input, subgetprice, subamount) # 지정가 구매
                     print(ret) 
                     record.append([ret['uuid'], curtime, ticker_input, subgetprice, subamount, "거미줄매수"])
                     # write_record(record)
 
-                    time.sleep(0.2)
+                    
                 write_record(record)
 
             print(curtime, "|", "Ticker : ", ticker_input ,"| 현재가 : " , current_price, "|", "목표가 : ", target_price, "|",  "5일선 평균가 : ", ma5)
@@ -220,7 +220,7 @@ while True:
                 elif buyflag == False and upbit.get_order(item[0])['state'] == 'done':
                     avaTicker = 'KRW-' + myval[1]['currency']
                     sellsubprice = float(upbit.get_order(item[0])['price']) + gaptick
-                    sellsubamount = float(upbit.get_order(item[0])['volume'])
+                    sellsubamount = subamount = round(baseprice / sellsubprice, 8 )
                     ret = upbit.buy_limit_order(avaTicker, sellsubprice, sellsubamount)
                     print(ret)
                     record.append([ret['uuid'], curtime, avaTicker, sellsubprice, sellsubamount, "거미줄매도"])
@@ -228,19 +228,15 @@ while True:
                 else:
                     pass
 
-            
-                time.sleep(0.2)
-
-                
 
             print(curtime, "|", "Ticker : ", avaTicker ,"| 현재가 : " , pyupbit.get_current_price(avaTicker), "| 평균매수가 : ", myval[1]['avg_buy_price'])
-            time.sleep(0.5)
+            
         
  
     except:
         print("에러 발생")
         
-    time.sleep(0.1)
+    time.sleep(0.5)
     
         
 

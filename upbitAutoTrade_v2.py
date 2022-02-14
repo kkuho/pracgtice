@@ -201,11 +201,13 @@ while True:
                         else : 
                             subgetprice = round(askprice - gaptick*i)
 
-                        subamount = round(baseprice / askprice, 8 ) #지정가 구매 수량 정하기
+                        subamount = round(baseprice / subgetprice, 8 ) #지정가 구매 수량 정하기
                         ret = upbit.buy_limit_order(ticker_input[0], subgetprice, subamount) # 지정가 구매
                         print(ret) 
                         record.append([ret['uuid'], curtime, ticker_input[0], subgetprice, subamount, "거미줄매수"])
-                        write_record(record)
+                        time.sleep(0.2)
+
+                    write_record(record)
 
                 print(curtime, "|", "Ticker : ", ticker_input[0] ,"| 현재가 : " , current_price, "|", "목표가 : ", target_price, "|",  "5일선 평균가 : ", ma5)
             
@@ -233,7 +235,7 @@ while True:
                 elif buyflag == False and upbit.get_order(item[0])['state'] == 'done':
                     avaTicker = 'KRW-' + myval[1]['currency']
                     sellsubprice = float(upbit.get_order(item[0])['price']) + gaptick
-                    sellsubamount = float(upbit.get_order(item[0])['volume'])
+                    sellsubamount = subamount = round(baseprice / sellsubprice, 8 )
                     ret = upbit.buy_limit_order(avaTicker, sellsubprice, sellsubamount)
                     print(ret)
                     record.append([ret['uuid'], curtime, avaTicker, sellsubprice, sellsubamount, "거미줄매도"])

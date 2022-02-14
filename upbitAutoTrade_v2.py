@@ -114,15 +114,16 @@ def write_record(record): # 거미줄 매매 정보
     row = []
 
     for a in record:
+        row.clear()
         leng = len(a)
         for b in range(leng):
-            row.append(i[b])
+            row.append(a[b])
 
-    ws.append(record)
-    wb.save('upbitRecord.xlsx')
+        ws.append(row)
+        wb.save('upbitRecord.xlsx')
 
 def getgapsize(askprice):
-    return round(askprice * 0.03, min_unit(askprice))
+    return round(askprice * 0.01, min_unit(askprice))
     
 def min_unit(askprice):
     if askprice >= 2000000:
@@ -213,7 +214,7 @@ while True:
         else:
             
             avaTicker = 'KRW-' + myval[1]['currency']
-            if pyupbit.get_current_price(avaTicker) > float(myval[1]['avg_buy_price']) * 1.03 :
+            if pyupbit.get_current_price(avaTicker) > float(myval[1]['avg_buy_price']) * 1.015 :
                     # 현재가가 매수 평균가보다 3% 이상일 때 매도
                     
                     trade = sell_crypto_currency(avaTicker)
@@ -242,6 +243,7 @@ while True:
                 time.sleep(0.2)
 
             print(curtime, "|", "Ticker : ", avaTicker ,"| 현재가 : " , pyupbit.get_current_price(avaTicker), "| 평균매수가 : ", myval[1]['avg_buy_price'])
+            time.sleep(0.2)
         
  
     except:

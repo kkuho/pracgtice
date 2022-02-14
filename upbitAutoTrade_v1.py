@@ -10,10 +10,11 @@ with open("djqqlxm.txt") as f: # upbit login
     secret = lines[1].strip()
     upbit = pyupbit.Upbit(key, secret)
 
-global coinlist, sortlist
+global coinlist, sortlist, record
 
 tickers = pyupbit.get_tickers(fiat="KRW")
 coinlist = []
+record = []
 buyflag = True
 
 def get_tickers(tickers):
@@ -143,11 +144,28 @@ while True:
             if myval[i]['currency'] != 'KRW' and pyupbit.get_current_price(avaTicker) > float(myval[i]['avg_buy_price']) * 1.03 :
                 
                 trade = sell_crypto_currency(avaTicker)
+                print(trade)
                 buyflag = True
                 write_trade(trade)
 
             else : 
                 pass
+
+        for item in record:
+            if buyflag == True:
+                cancel = upbit.cancel_order(item[0])
+                print(cancel)
+            
+            elif buyflag == False and upbit.get_order(item[0])['state'] == 'done':
+                avaTicker = 'KRW-' + myval[1]['currency']
+                sellsubprice = upbit.get_order[item[0]]['price'] + gaptick
+                sellsubamount = upbit.get_order[item[0]]['volume']
+                ret = upbit.buy_limit_order(avaTicker, sellsubprice, sellsubamount)
+                print(ret)
+                record.append([ret['uuid'], curtime])
+            else:
+                pass
+            
 
         for item in tickers:
             
@@ -191,6 +209,7 @@ while True:
                 buyflag = False
                 
                 gaptick = getgapsize(askprice)
+                record.clear()
 
                 write_trade(trade)
                 write_target(ticker_input[0], target_price, ma5, curtime, baseprice)
@@ -206,6 +225,7 @@ while True:
                     subamount = round(baseprice / askprice, 8 ) #지정가 구매 수량 정하기
                     ret = upbit.buy_limit_order(ticker_input[0], subgetprice, subamount) # 지정가 구매
                     print(ret) 
+                    record.append([ret['uuid'], curtime, ticker_input[0], subgetprice, subamount])
 
                  
 

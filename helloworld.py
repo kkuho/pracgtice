@@ -157,40 +157,55 @@ myval = upbit.get_balances()
 
 ticker = [["KRW-ETH", 12], ["KRW-XRP", 232]]
 
-for i in ticker:
-    a = i[0]
+# for i in ticker:
+#     a = i[0]
+#     print(a)
+
+
+record = ['911f8bcc-f94e-4d88-a661-8cb1b539814c','fe66ac79-57ab-440f-a792-a64a9c68bb35']
+print(upbit.get_order(record[0])['uuid'])
+print(len(record))
+
+for a in range(2):
     print(a)
 
+index = []
+buyflag = True
+# if buyflag == False and upbit.get_order('911f8bcc-f94e-4d88-a661-8cb1b539814c')['state'] == 'done':
+#     print("OK")
 
-# record = [['911f8bcc-f94e-4d88-a661-8cb1b539814c', curtime, 1],['911f8bcc-f94e-4d88-a661-8cb1b539814c', curtime, 2]]
+if buyflag == True:
 
-
-
-buyflag = False
-if buyflag == False and upbit.get_order('911f8bcc-f94e-4d88-a661-8cb1b539814c')['state'] == 'done':
-    print("OK")
-
-
-gaptick = getgapsize(askprice)
-print(gaptick)
-print(upbit.get_order('911f8bcc-f94e-4d88-a661-8cb1b539814c')['price'])
-print(type(upbit.get_order('911f8bcc-f94e-4d88-a661-8cb1b539814c')['price']))
-
-for item in record:
-    if buyflag == True:
-        cancel = upbit.cancel_order(item[0])
-        print(cancel)
-    
-    elif buyflag == False and upbit.get_order(item[0])['state'] == 'done':
+    for i in record[:]:
+        print(i)
+        # if upbit.get_order(i)['state'] == 'done':
+        #     record.remove(i)
         
-        avaTicker = 'KRW-SNT'
-        sellsubprice = float(upbit.get_order(item[0])['price']) + gaptick
-        print(sellsubprice)
-        sellsubamount = float(upbit.get_order(item[0])['volume'])
-        print(sellsubamount)
-        write_record(record)
-        ret = upbit.sell_limit_order(avaTicker, sellsubprice, sellsubamount)
-        print(ret)
+     
+
+print(record)
+
+
+# gaptick = getgapsize(askprice)
+# print(gaptick)
+# print(upbit.get_order('911f8bcc-f94e-4d88-a661-8cb1b539814c')['price'])
+# print(type(upbit.get_order('911f8bcc-f94e-4d88-a661-8cb1b539814c')['price']))
+
+# for item in record:
+#     if buyflag == True:
+#         cancel = upbit.cancel_order(item[0])
+#         print(cancel)
+    
+#     elif buyflag == False and upbit.get_order(item[0])['state'] == 'done':
+        
+#         avaTicker = 'KRW-SNT'
+#         sellsubprice = float(upbit.get_order(item[0])['price']) + gaptick
+#         print(sellsubprice)
+#         sellsubamount = float(upbit.get_order(item[0])['volume'])
+#         print(sellsubamount)
+#         write_record(record)
+#         ret = upbit.sell_limit_order(avaTicker, sellsubprice, sellsubamount)
+#         print(ret)
 
 
       

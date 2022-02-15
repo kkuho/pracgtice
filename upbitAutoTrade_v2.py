@@ -205,7 +205,7 @@ while True:
                         ret = upbit.buy_limit_order(ticker_input[0], subgetprice, subamount) # 지정가 구매
                         print(ret) 
                         record.append([ret['uuid'], curtime, ticker_input[0], subgetprice, subamount, "거미줄매수"])
-                        time.sleep(0.2)
+                        
 
                     write_record(record)
 

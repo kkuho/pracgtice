@@ -162,24 +162,22 @@ ticker = [["KRW-ETH", 12], ["KRW-XRP", 232]]
 #     print(a)
 
 
-record = ['911f8bcc-f94e-4d88-a661-8cb1b539814c','fe66ac79-57ab-440f-a792-a64a9c68bb35']
-print(upbit.get_order(record[0])['uuid'])
-print(len(record))
+record = [['911f8bcc-f94e-4d88-a661-8cb1b539814c', 'date'], ['fe66ac79-57ab-440f-a792-a64a9c68bb35', 'jung']]
+print(upbit.get_order(record[1][0]))
+# print(len(record))
 
-for a in range(2):
-    print(a)
 
-index = []
+
 buyflag = True
 # if buyflag == False and upbit.get_order('911f8bcc-f94e-4d88-a661-8cb1b539814c')['state'] == 'done':
 #     print("OK")
 
-if buyflag == True:
 
-    for i in record[:]:
-        print(i)
-        # if upbit.get_order(i)['state'] == 'done':
-        #     record.remove(i)
+
+for i in record[:]:
+    
+    if upbit.get_order(i[0])['state'] == 'done':
+        record.remove(i)
         
      
 

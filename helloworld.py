@@ -162,26 +162,36 @@ ticker = [["KRW-ETH", 12], ["KRW-XRP", 232]]
 #     print(a)
 
 
-record = [['911f8bcc-f94e-4d88-a661-8cb1b539814c', 'date'], ['fe66ac79-57ab-440f-a792-a64a9c68bb35', 'jung']]
-print(upbit.get_order(record[1][0]))
+# record = [['97ce9289-85d6-4d17-89d7-2e2614ef6816', 'date'], ['0ec52b02-ad12-4987-8506-fb93c7e8b589', 'jung']]
+# print(upbit.get_order(record[1][0]))
 # print(len(record))
+avg = 10000
+cur = 10100
 
+print((cur-avg)/avg * 100)
 
+avaTicker = "KRW-ATOM"
+print(type(myval[1]['avg_buy_price']))
+print(type(pyupbit.get_current_price(avaTicker)))
 
-buyflag = True
+rate_of_return = round((pyupbit.get_current_price(avaTicker)-float(myval[1]['avg_buy_price'])) / float(myval[1]['avg_buy_price']) * 100 , 1)
+
+print(curtime, "|", "Ticker : ", avaTicker ,"| 현재가 : " , pyupbit.get_current_price(avaTicker), "| 평균매수가 : ", myval[1]['avg_buy_price']), " | 수익율 : ", ((pyupbit.get_current_price(avaTicker)-float(myval[1]['avg_buy_price'])) / float(myval[1]['avg_buy_price']) * 100)
+print(" | 수익률 : ", rate_of_return)
+# buyflag = True
 # if buyflag == False and upbit.get_order('911f8bcc-f94e-4d88-a661-8cb1b539814c')['state'] == 'done':
 #     print("OK")
 
 
 
-for i in record[:]:
+# for i in record[:]:
     
-    if upbit.get_order(i[0])['state'] == 'done':
-        record.remove(i)
+#     if upbit.get_order(i[0])['state'] == 'done':
+#         record.remove(i)
         
      
 
-print(record)
+# print(record)
 
 
 # gaptick = getgapsize(askprice)

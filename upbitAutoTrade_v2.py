@@ -213,7 +213,7 @@ while True:
         else:
             
             avaTicker = 'KRW-' + myval[1]['currency']
-            if pyupbit.get_current_price(avaTicker) > float(myval[1]['avg_buy_price']) * 1.3 :
+            if pyupbit.get_current_price(avaTicker) > float(myval[1]['avg_buy_price']) * 1.012 :
                     # 현재가가 매수 평균가보다 3% 이상일 때 매도
                     
                 trade = sell_crypto_currency(avaTicker)
@@ -224,27 +224,38 @@ while True:
                 for item in record:
                     cancel = upbit.cancel_order(item[0])
                     print(cancel)
+                
+                record.clear()
 
             else : 
                 pass
 
             for item in record[:]:
                 
-                if buyflag == False and upbit.get_order(item[0])['state'] == 'done':
+                if  upbit.get_order(item[0])['side'] == 'bid' and upbit.get_order(item[0])['state'] == 'done':
                     avaTicker = 'KRW-' + myval[1]['currency']
                     sellsubprice = float(upbit.get_order(item[0])['price']) + gaptick
-                    sellsubamount = subamount = round(baseprice / sellsubprice, 8 )
+                    sellsubamount = round(baseprice / sellsubprice, 8 )
                     ret = upbit.sell_limit_order(avaTicker, sellsubprice, sellsubamount)
                     print(ret)
-                    record.append([ret['uuid'], curtime, ticker_input[0], subgetprice, subamount, '거미줄매도'])
+                    record.append([ret['uuid'], datetime.datetime.now(), avaTicker, sellsubprice, sellsubamount, '거미줄매도'])
                     record.remove(item)
                     write_record(record)
-                else:
-                    pass
-                
 
-            print(curtime, "|", "Ticker : ", avaTicker ,"| 현재가 : " , pyupbit.get_current_price(avaTicker), "| 평균매수가 : ", myval[1]['avg_buy_price'])
-            time.sleep(0.2)
+                elif upbit.get_order(item[0])['side'] == 'ask' and upbit.get_order(item[0])['state'] == 'done':
+                    avaTicker = 'KRW-' + myval[1]['currency']
+                    buysubprice = float(upbit.get_order(item[0])['price']) - gaptick
+                    buysubamount = round(baseprice / buysubprice, 8 )
+                    ret = upbit.buy_limit_order(avaTicker, buysubprice, buysubamount)
+                    print(ret)
+                    record.append([ret['uuid'], datetime.datetime.now(), avaTicker, buysubprice, buysubamount, '추가 거미줄매수'])
+                    record.remove(item)
+                    write_record(record)
+                    
+                
+            rate_of_return = round((pyupbit.get_current_price(avaTicker)-float(myval[1]['avg_buy_price'])) / float(myval[1]['avg_buy_price']) * 100 , 1)
+            print(curtime, "|", "Ticker : ", avaTicker ,"| 현재가 : " , pyupbit.get_current_price(avaTicker), "| 평균매수가 : ", myval[1]['avg_buy_price'], " | 수익률 : ", rate_of_return, "%")
+            
         
  
     except:

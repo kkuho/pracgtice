@@ -18,6 +18,7 @@ coinlist = []
 record = []
 buyflag = True
 
+
 def get_tickers(tickers):
 
     curtime = datetime.datetime.now()
@@ -161,6 +162,22 @@ def rsi(ticker, count):
     rs = au / ad
     return pandas.Series(100 - (100 / (1 + rs)), name = 'RSI')
 
+def b_flag(myval):
+    
+    tp = []
+    for i in range(1, len(myval)):
+
+        # currency = myval[i]['currency']
+        balance = float(myval[i]['balance'])
+        avg_buy_price = float(myval[i]['avg_buy_price'])
+        total = balance * avg_buy_price
+        if total < 5000:
+            tp.append("True")
+        else:
+            tp.append("False")
+
+        return "False" not in tp
+    
 
 
 while True:
@@ -170,7 +187,7 @@ while True:
         myval = upbit.get_balances()
         coinlist.clear()
 
-        if len(myval) < 2 : # 보유한 coin이 있는지 확인. 2보다 작으면 보유한 coin이 없는 것으로 보고, 매수 로직 가동
+        if len(myval) < 2 or b_flag(myval) == True: # 보유한 coin이 있는지 확인. 2보다 작으면 보유한 coin이 없는 것으로 보고, 매수 로직 가동
 
             buyflag = True
             for item in tickers:
@@ -188,7 +205,7 @@ while True:
                 time.sleep(0.2)
             
 
-            for idx, ticker_input in enumerate(sortlist[0:13]) :
+            for idx, ticker_input in enumerate(sortlist[0:16]) :
 
                 current_price = pyupbit.get_current_price(ticker_input[0])
                 target_price = get_target_price(ticker_input[0])
@@ -198,7 +215,7 @@ while True:
                 rate_of_rise = round((current_price - target_price)/target_price * 100, 1)
                 now_rsi = rsi(ticker_input[0], 14).iloc[-1]
 
-                if (buyflag and current_price > target_price) and (current_price > ma5) and (krw >=5000) and (rate_of_rise <= 5):
+                if (buyflag and current_price > target_price) and (current_price > ma5) and now_rsi < 70 and (krw >=5000):
                     
                     print("가즈아아아!~~~")
                     baseprice = upbit.get_balance()//10 * 0.995 # 예수금의 10%를 baseprice로 매수 진행
@@ -226,8 +243,7 @@ while True:
                     time.sleep(0.2)
             
                 
-                
-        else:
+        elif b_flag == False:
             
             avaTicker = 'KRW-' + myval[1]['currency']
             if pyupbit.get_current_price(avaTicker) > float(myval[1]['avg_buy_price']) * 1.03 :

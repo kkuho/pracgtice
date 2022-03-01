@@ -148,74 +148,16 @@ def write_record(record): # 거미줄 매매 정보
 
 
 krw = upbit.get_balance()
-current_price = pyupbit.get_current_price("KRW-SNT")
-target_price = get_target_price("KRW-SNT")
-ma5 = get_yesterday_ma5("KRW-SNT")
+
+ticker_input = "KRW-NEO"
+
+current_price = pyupbit.get_current_price(ticker_input)
+target_price = get_target_price(ticker_input)
+ma5 = get_yesterday_ma5(ticker_input)
 curtime = datetime.datetime.now()
-askprice = pyupbit.get_orderbook("KRW-SNT")['orderbook_units'][0]['ask_price']
-myval = upbit.get_balances()
+askprice = pyupbit.get_orderbook(ticker_input)['orderbook_units'][0]['ask_price']
 
-ticker = [["KRW-ETH", 12], ["KRW-XRP", 232]]
+print(curtime, "|", "Ticker : ", ticker_input ,"| 현재가 : " , current_price, "|", "목표가 : ", target_price, "|",  "5일선 평균가 : ", ma5)
 
-# for i in ticker:
-#     a = i[0]
-#     print(a)
-
-
-# record = [['97ce9289-85d6-4d17-89d7-2e2614ef6816', 'date'], ['0ec52b02-ad12-4987-8506-fb93c7e8b589', 'jung']]
-# print(upbit.get_order(record[1][0]))
-# print(len(record))
-avg = 10000
-cur = 10100
-
-print((cur-avg)/avg * 100)
-
-avaTicker = "KRW-ATOM"
-print(type(myval[1]['avg_buy_price']))
-print(type(pyupbit.get_current_price(avaTicker)))
-
-rate_of_return = round((pyupbit.get_current_price(avaTicker)-float(myval[1]['avg_buy_price'])) / float(myval[1]['avg_buy_price']) * 100 , 1)
-
-print(curtime, "|", "Ticker : ", avaTicker ,"| 현재가 : " , pyupbit.get_current_price(avaTicker), "| 평균매수가 : ", myval[1]['avg_buy_price']), " | 수익율 : ", ((pyupbit.get_current_price(avaTicker)-float(myval[1]['avg_buy_price'])) / float(myval[1]['avg_buy_price']) * 100)
-print(" | 수익률 : ", rate_of_return)
-# buyflag = True
-# if buyflag == False and upbit.get_order('911f8bcc-f94e-4d88-a661-8cb1b539814c')['state'] == 'done':
-#     print("OK")
-
-
-
-# for i in record[:]:
-    
-#     if upbit.get_order(i[0])['state'] == 'done':
-#         record.remove(i)
-        
-     
-
-# print(record)
-
-
-# gaptick = getgapsize(askprice)
-# print(gaptick)
-# print(upbit.get_order('911f8bcc-f94e-4d88-a661-8cb1b539814c')['price'])
-# print(type(upbit.get_order('911f8bcc-f94e-4d88-a661-8cb1b539814c')['price']))
-
-# for item in record:
-#     if buyflag == True:
-#         cancel = upbit.cancel_order(item[0])
-#         print(cancel)
-    
-#     elif buyflag == False and upbit.get_order(item[0])['state'] == 'done':
-        
-#         avaTicker = 'KRW-SNT'
-#         sellsubprice = float(upbit.get_order(item[0])['price']) + gaptick
-#         print(sellsubprice)
-#         sellsubamount = float(upbit.get_order(item[0])['volume'])
-#         print(sellsubamount)
-#         write_record(record)
-#         ret = upbit.sell_limit_order(avaTicker, sellsubprice, sellsubamount)
-#         print(ret)
-
-
-      
-#     else:
-#         pass
+rate_profit = round((current_price - target_price) / target_price * 100, 1)
+print(rate_profit)

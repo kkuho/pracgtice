@@ -135,7 +135,7 @@ def write_balance(curtime, krw): # 계좌 balance를 입력하는 함수
     ws.append(row)
     wb.save('upbitRecord.xlsx')
 
-def delete_trade(): # 계좌 balance를 입력하는 함수
+def delete_trade(): # 거미줄 매수 매도 기록 지우는 함수
     
     wb = load_workbook('upbitRecord.xlsx')
     ws = wb[wb.sheetnames[2]]
@@ -143,7 +143,7 @@ def delete_trade(): # 계좌 balance를 입력하는 함수
     ws.delete_rows(2,1000)
     wb.save('upbitRecord.xlsx')
 
-def check_record(): # 계좌 balance를 입력하는 함수
+def check_record(): # 미체결 주문이 있는지 확인하고 있으면, 해당 uuid를 record에 저장
     
     read_record = pd.read_excel("/Users/kuhojung/Documents/CodingWorkSpace/practice/upbitRecord.xlsx", sheet_name=2, usecols=['UUID', 'time', 'ticker', 'subgetprice', 'subgetamount', '매수 / 매도'])
     record = read_record.values.tolist()
@@ -151,7 +151,6 @@ def check_record(): # 계좌 balance를 입력하는 함수
     
     return record
    
-
 def getgapsize(askprice):
     return round(askprice * 0.03, min_unit(askprice))
     
@@ -190,7 +189,7 @@ def rsi(ticker, count):
     rs = au / ad
     return pd.Series(100 - (100 / (1 + rs)), name = 'RSI')
 
-check_record()
+record = check_record()
 
 while True:
     try :
@@ -198,7 +197,7 @@ while True:
         krw = upbit.get_balance()
         myval = upbit.get_balances()
         coinlist.clear()
-        # check_record()
+        
         
 
         if len(myval) < 2 : # 보유한 coin이 있는지 확인. 2보다 작으면 보유한 coin이 없는 것으로 보고, 매수 로직 가동
@@ -230,9 +229,10 @@ while True:
                 now_rsi = rsi(ticker_input[0], 14).iloc[-1]
 
 
-                if (buyflag and current_price > target_price) and (current_price > ma5) and (krw >=5000) and (rate_of_rise <= 10):
+                if (buyflag and current_price > target_price) and (current_price > ma5) and (krw >=5000) and (rate_of_rise <= 8):
                     
                     print("가즈아아아!~~~")
+                    
                     write_balance(curtime, krw)
                     baseprice = upbit.get_balance()//10 * 0.995 # 예수금의 10%를 baseprice로 매수 진행
                     trade = buy_crypto_currency(ticker_input[0], baseprice)
@@ -244,7 +244,7 @@ while True:
                     write_trade(trade, krw)
                     write_target(ticker_input[0], target_price, ma5, curtime, baseprice, krw)
 
-                    for i in range(1,10):
+                    for i in range(1,11):
                         subgetprice = 0
                         subgetprice = round(askprice - gaptick*i)
 
@@ -252,11 +252,12 @@ while True:
                         ret = upbit.buy_limit_order(ticker_input[0], subgetprice, subamount) # 지정가 구매
                         print(ret) 
                         record.append([ret['uuid'], curtime, ticker_input[0], subgetprice, subamount, "거미줄매수"])
+                    time.sleep(0.5)
                         
                     write_record(record)
                 else:
                     print(curtime, "|", "Ticker : ", ticker_input[0] ,"| 현재가 : " , current_price, "|", "목표가 : ", target_price, "|",  "5일선 평균가 : ", ma5)
-                    time.sleep(0.2)
+                    
             
                 
                 
@@ -265,16 +266,16 @@ while True:
             avaTicker = 'KRW-' + myval[1]['currency']
             if pyupbit.get_current_price(avaTicker) > float(myval[1]['avg_buy_price']) * 1.02 :
                     # 현재가가 매수 평균가보다 3% 이상일 때 매도
-                    
+                
+                for item in record:
+                    cancel = upbit.cancel_order(item[0])
+                    print(cancel)
+
                 trade = sell_crypto_currency(avaTicker)
                 print(trade)
                 buyflag = True
                 write_trade(trade, krw)
 
-                for item in record:
-                    cancel = upbit.cancel_order(item[0])
-                    print(cancel)
-                
                 record.clear()
                 delete_trade()
 
@@ -308,7 +309,7 @@ while True:
                 
             rate_of_return = round((pyupbit.get_current_price(avaTicker)-float(myval[1]['avg_buy_price'])) / float(myval[1]['avg_buy_price']) * 100 , 1)
             print(curtime, "|", "Ticker : ", avaTicker ,"| 현재가 : " , pyupbit.get_current_price(avaTicker), "| 평균매수가 : ", myval[1]['avg_buy_price'], " | 수익률 : ", rate_of_return, "%")
-            time.sleep(0.5)
+            time.sleep(0.2)
         
  
     except:

@@ -1,5 +1,5 @@
 
-from email.mime import base
+#from email.mime import base
 import pyupbit
 import time
 import datetime
@@ -230,7 +230,7 @@ def check_baseprice():
 record = check_record()
 gaptick = check_gaptick()
 baseprice = check_baseprice()
-write_record(record)
+
 
 while True:
     # try :
@@ -293,12 +293,14 @@ while True:
                     ret = upbit.buy_limit_order(ticker_input[0], subgetprice, subamount) # 지정가 구매
                     print(ret) 
                     record.append([ret['uuid'], curtime, ticker_input[0], subgetprice, subamount, "거미줄매수"])
-                    time.sleep(0.5)
+                    time.sleep(1)
                     
                 write_record(record)
+            
+
             else:
                 print(curtime, "|", "Ticker : ", ticker_input[0] ,"| 현재가 : " , current_price, "|", "목표가 : ", target_price, "|",  "5일선 평균가 : ", ma5)
-                
+            time.sleep(0.5)
         
             
             
@@ -311,6 +313,7 @@ while True:
             for item in record:
                 cancel = upbit.cancel_order(item[0])
                 print(cancel)
+                time.sleep(0.1)
 
             trade = sell_crypto_currency(avaTicker)
             print(trade)
@@ -346,11 +349,12 @@ while True:
                 record.remove(item)
                 delete_trade()
                 write_record(record)
+            time.sleep(0.2)
                 
             
         rate_of_return = round((pyupbit.get_current_price(avaTicker)-float(myval[1]['avg_buy_price'])) / float(myval[1]['avg_buy_price']) * 100 , 1)
         print(curtime, "|", "Ticker : ", avaTicker ,"| 현재가 : " , pyupbit.get_current_price(avaTicker), "| 평균매수가 : ", myval[1]['avg_buy_price'], " | 수익률 : ", rate_of_return, "%")
-        time.sleep(0.2)
+        
     
  
     # except:

@@ -1,5 +1,4 @@
 
-from email.mime import base
 import pyupbit
 import time
 import datetime
@@ -185,7 +184,7 @@ def min_unit(askprice):
     elif askprice >= 500000:
         return -2
     elif askprice >= 100000:
-        return -1
+        return -2
     elif askprice >= 10000:
         return -1
     elif askprice >= 1000:
@@ -242,16 +241,21 @@ def check_gaptick_baseprice(): # 봇이 멈췄다가 다시 동작할 때 gaptic
             print(baseprice)
             
             gaptick = getgapsize(askprice)
+            print(gaptick)
             ticker_input = record_1stOrder[leng-1][0]
+            print(ticker_input)
             curtime = datetime.datetime.now()
 
 
 
             for i in range(1, 10):
+                print("start")
                 subgetprice = 0
                 subgetprice = round(askprice - gaptick * i)
-
+                print(subgetprice)
                 subamount = round(baseprice / subgetprice, 8)  # 지정가 구매 수량 정하기
+                print(subamount)
+
                 ret = upbit.buy_limit_order(ticker_input, subgetprice, subamount)  # 지정가 구매
                 print(ret)
                 record.append([ret['uuid'], curtime, ticker_input, subgetprice, subamount, "거미줄매수"])
@@ -271,14 +275,12 @@ gaptick, baseprice = check_gaptick_baseprice()
 
 
 while True:
-    # try :
+    
     curtime = datetime.datetime.now()
     krw = upbit.get_balance()
     myval = upbit.get_balances()
     coinlist.clear()
     
-    
-
     if len(myval) < 2 : # 보유한 coin이 있는지 확인. 2보다 작으면 보유한 coin이 없는 것으로 보고, 매수 로직 가동
 
         buyflag = True
@@ -324,9 +326,10 @@ while True:
                 record.clear()
 
                 write_trade(trade, krw)
-                write_target(ticker_input[0], curtime, baseprice, krw)
+                #write_target(ticker_input[0], curtime, baseprice, krw)
 
-                for i in range(1,10):
+                # 9개의 거미줄매수 예약
+                for i in range(1,10): 
                     subgetprice = 0
                     subgetprice = round(askprice - gaptick*i)
 
@@ -341,24 +344,28 @@ while True:
 
             else:
                 print(curtime, "|", "Ticker : ", ticker_input[0] ,"| 현재가 : " , current_price)
-            time.sleep(0.5)
+            time.sleep(0.1)
         
             
             
     else:
         
         avaTicker = 'KRW-' + myval[1]['currency']
-        if pyupbit.get_current_price(avaTicker) > float(myval[1]['avg_buy_price']) * 1.01 :
-                # 현재가가 매수 평균가보다 3% 이상일 때 매도
+        if pyupbit.get_current_price(avaTicker) > float(myval[1]['avg_buy_price']) * 1.012 :
+                # 현재가가 매수 평균가보다 1% 이상일 때 매도
             
+            # 거미줄매매 예약 모두 취소
+            
+            trade = sell_crypto_currency(avaTicker)
+            print(trade)
+
             for item in record:
                 cancel = upbit.cancel_order(item[0])
                 print(cancel)
                 time.sleep(0.1)
 
-            trade = sell_crypto_currency(avaTicker)
-            print(trade)
             buyflag = True
+            krw = upbit.get_balance()
             write_trade(trade, krw)
 
             record.clear()
@@ -367,7 +374,8 @@ while True:
         else : 
             pass
 
-        for item in record[:]:
+        for item in record[:]: 
+            # 거미줄 매매 uuid를 가지고 매매가 되는지 스캔닝. 만약 매수가 되었으면 그 지점 위에 매도 거미줄을 건다. 매도가 되었으면 그 밑에 거미줄매수를 건다.
             
             if  upbit.get_order(item[0])['side'] == 'bid' and upbit.get_order(item[0])['state'] == 'done':
                 avaTicker = 'KRW-' + myval[1]['currency']
@@ -376,9 +384,9 @@ while True:
                 ret = upbit.sell_limit_order(avaTicker, sellsubprice, sellsubamount)
                 print(ret)
                 record.append([ret['uuid'], datetime.datetime.now(), avaTicker, sellsubprice, sellsubamount, '추가 거미줄매도'])
-                record.remove(item)
-                delete_trade()
-                write_record(record)
+                record.remove(item) # 거래가 된 거미줄매매는 rocord에서 삭제
+                delete_trade() # 엑셀에 있는 기록을 삭제
+                write_record(record) # update된 record를 엑셀에 저장
 
             elif upbit.get_order(item[0])['side'] == 'ask' and upbit.get_order(item[0])['state'] == 'done':
                 avaTicker = 'KRW-' + myval[1]['currency']

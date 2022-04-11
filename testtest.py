@@ -1,6 +1,5 @@
-# 두가지 코인으로 봇 돌리기
+# 두가지 코인으로 봇 돌리기 - test
 
-from nbformat import write
 import pyupbit
 import time
 import datetime

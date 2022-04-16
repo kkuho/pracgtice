@@ -1,6 +1,7 @@
 # 두가지 코인으로 봇 돌리기
 
-from nbformat import write
+# from nbformat import write
+from turtle import up
 import pyupbit
 import time
 import datetime
@@ -42,9 +43,7 @@ def get_tickers(tickers):
 
 def get_target_price(ticker): # 변동성 돌파 구간 계산 
 
-    print(ticker)
-    df = pyupbit.get_ohlcv(ticker, interval='minute10', count=10)
-    print(df)
+    df = pyupbit.get_ohlcv(ticker, interval='minute30', count=10)
 
     yesterday = df.iloc[-2]
     # print(yesterday)
@@ -64,9 +63,8 @@ def get_target_price(ticker): # 변동성 돌파 구간 계산
 
 def get_yesterday_ma5(ticker): # 5일 평균선
     
-    print(ticker)
-    df = pyupbit.get_ohlcv(ticker, interval='minute10', count=10)
-    print(df)
+    df = pyupbit.get_ohlcv(ticker, interval='minute30', count=10)
+
     yesterday = df.iloc[-2]
     # print(yesterday)
     yesterday_close = yesterday['close']
@@ -92,7 +90,7 @@ def sell_crypto_currency(ticker): # 매도
     return sell
     
 def write_trade(trade, krw): # trade 정보를 엑셀로 기록하는 함수
-    print(trade)
+    
     wb = load_workbook('upbitRecord.xlsx')
     ws = wb[wb.sheetnames[0]]
     row = []
@@ -103,9 +101,12 @@ def write_trade(trade, krw): # trade 정보를 엑셀로 기록하는 함수
     row.append(time_action)
     row.append(trade['market'])
 
+    funds = float(trade['trades'][0]['funds'])
+    paid_fee = float(trade['paid_fee'])
+
     if trade['side'] == 'ask': 
         row.append('매도')
-        row.append(trade['volume'])
+        row.append(funds - paid_fee)
         row.append(trade['uuid'])
         
     else : 
@@ -118,12 +119,17 @@ def write_trade(trade, krw): # trade 정보를 엑셀로 기록하는 함수
     wb.save('upbitRecord.xlsx')
 
 def write_trade2(trade, krw): # trade 정보를 엑셀로 기록하는 함수
-    print(trade)
+   
     wb = load_workbook('upbitRecord.xlsx')
     ws = wb[wb.sheetnames[1]]
     row = []
-    day = trade['created_at'].split('T')[0] # 날짜
-    time_action = trade['created_at'].split('T')[1].split('+')[0]
+    # day = trade['created_at'].split('T')[0] # 날짜
+    # time_action = trade['created_at'].split('T')[1].split('+')[0]
+    curtime = datetime.datetime.now()
+
+
+    day = str(curtime).split()[0]
+    time_action = str(curtime).split()[1]
 
     row.append(day)
     row.append(time_action)
@@ -207,6 +213,8 @@ def check_record(): # 미체결 주문이 있는지 확인하고 있으면, 해�
             
             for i in pre_record:
                 record.append([i['uuid'], curtime,  i['market'], i['price'], i['side'], i['ord_type']])
+            
+            time.sleep(0.1)
 
     for i in record:
         print(i)
@@ -376,7 +384,7 @@ while True:
                     subamount = round(baseprice / subgetprice, 8 ) #지정가 구매 수량 정하기
                     ret = upbit.buy_limit_order(ticker_input[0], subgetprice, subamount) # 지정가 구매
                     print(ret) 
-                    record.append([ret['uuid'], curtime, ticker_input[0], askprice1, baseprice, gaptick1, subgetprice,"거미줄매수"])
+                    record.append([ret['uuid'], curtime, ticker_input[0], current_price, baseprice, gaptick1, subgetprice,"거미줄매수"])
                     time.sleep(1)
                 print(record)    
                 write_record(record)
@@ -429,7 +437,7 @@ while True:
                 buyflag = False
                 
                 gaptick2 = getgapsize(askprice2)
-                write_trade2(trade, krw)
+                write_trade(trade, krw)
                 
 
                 # 9개의 거미줄매수 예약
@@ -440,7 +448,7 @@ while True:
                     subamount = round(baseprice / subgetprice, 8 ) #지정가 구매 수량 정하기
                     ret = upbit.buy_limit_order(ticker_input[0], subgetprice, subamount) # 지정가 구매
                     print(ret) 
-                    record.append([ret['uuid'], curtime, ticker_input[0], askprice2, baseprice, gaptick2, subgetprice, "거미줄매수"])
+                    record.append([ret['uuid'], curtime, ticker_input[0], current_price, baseprice, gaptick2, subgetprice, "거미줄매수"])
                     time.sleep(1)
                 print(record)    
                 write_record(record)
@@ -453,7 +461,7 @@ while True:
         
         for i in range(1,len(myval)):
             avaTicker = 'KRW-' + myval[i]['currency']
-            if pyupbit.get_current_price(avaTicker) > float(myval[i]['avg_buy_price']) * 1.012 :
+            if pyupbit.get_current_price(avaTicker) > float(myval[i]['avg_buy_price']) * 1.01 :
                     # 현재가가 매수 평균가보다 1% 이상일 때 매도
                 
                 # 거미줄매매 예약 모두 취소
@@ -462,19 +470,19 @@ while True:
                 buyflag = True
                 krw = upbit.get_balance()
 
-                for item in record:
+                for item in record[:]:
                     if item[2] == avaTicker:
                         cancel = upbit.cancel_order(item[0])
                         print(cancel)
                         write_trade2(cancel, krw)
                         record.remove(item)
-                        time.sleep(0.5)
+                        time.sleep(1)
 
                 write_trade(trade, krw)
 
             else : 
                 rate_of_return = round((pyupbit.get_current_price(avaTicker)-float(myval[i]['avg_buy_price'])) / float(myval[i]['avg_buy_price']) * 100 , 1)
-                print(curtime, "|", "Ticker : ", avaTicker , "| 평균매수가 : ", myval[i]['avg_buy_price'],"| 현재가 : " , pyupbit.get_current_price(avaTicker), "| 목표매도가 : ", float(myval[i]['avg_buy_price']) * 1.012 ," | 수익률 : ", rate_of_return, "%")
+                print(curtime, "|", "Ticker : ", avaTicker , "| 평균매수가 : ", format(round(float(myval[i]['avg_buy_price']),0),','),"| 현재가 : " , format(pyupbit.get_current_price(avaTicker),','), "| 목표매도가 : ", format(round(float(myval[i]['avg_buy_price']) * 1.012,0),','), " | 수익률 : ", rate_of_return, "%")
                 time.sleep(0.1)
 
         for item in record[:]:
@@ -491,6 +499,8 @@ while True:
                 record.remove(item) # 거래가 된 거미줄매매는 rocord에서 삭제
                 delete_trade() # 엑셀에 있는 기록을 삭제
                 write_record(record) # update된 record를 엑셀에 저장
+                krw = upbit.get_balance()
+                write_trade(ret, krw)
 
             elif upbit.get_order(item[0])['side'] == 'ask' and upbit.get_order(item[0])['state'] == 'done':
                 avaTicker = item[2]
@@ -503,7 +513,9 @@ while True:
                 record.remove(item)
                 delete_trade()
                 write_record(record)
-            time.sleep(0.2)
+                krw = upbit.get_balance()
+                write_trade(ret, krw)
+            time.sleep(0.5)
                 
             
         

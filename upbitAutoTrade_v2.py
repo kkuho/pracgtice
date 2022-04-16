@@ -349,7 +349,7 @@ while True:
                 record.remove(item)
                 delete_trade()
                 write_record(record)
-            time.sleep(0.2)
+            time.sleep(0.5)
                 
             
         rate_of_return = round((pyupbit.get_current_price(avaTicker)-float(myval[1]['avg_buy_price'])) / float(myval[1]['avg_buy_price']) * 100 , 1)
@@ -360,7 +360,7 @@ while True:
     # except:
     #     print("에러 발생")
         
-    time.sleep(0.1)
+    time.sleep(0.2)
     
         
 

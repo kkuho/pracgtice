@@ -97,12 +97,15 @@ def write_trade(trade, krw): # trade 정보를 엑셀로 기록하는 함수
     day = trade['created_at'].split('T')[0] # 날짜
     time_action = trade['created_at'].split('T')[1].split('+')[0]
 
+    get_order = []
+    get_order = upbit.get_order(trade['uuid'])
+
     row.append(day)
     row.append(time_action)
     row.append(trade['market'])
 
-    funds = float(trade['trades'][0]['funds'])
-    paid_fee = float(trade['paid_fee'])
+    funds = float(get_order['trades'][0]['funds'])
+    paid_fee = float(get_order['paid_fee'])
 
     if trade['side'] == 'ask': 
         row.append('매도')
@@ -115,6 +118,7 @@ def write_trade(trade, krw): # trade 정보를 엑셀로 기록하는 함수
         row.append(trade['uuid'])
      
     row.append(krw)
+    row.append(upbit.get_balances()[0]['locked'])
     ws.append(row)
     wb.save('upbitRecord.xlsx')
 
@@ -245,7 +249,7 @@ def min_unit(askprice):
         return 2
 
 def rsi(ticker, count):
-    data = pyupbit.get_ohlcv(ticker, interval='minute60')
+    data = pyupbit.get_ohlcv(ticker, interval='minute30')
     close_data = data['close']
     delta = close_data.diff()
 
@@ -319,7 +323,7 @@ def check_gaptick_baseprice(): # 봇이 멈췄다가 다시 동작할 때 gaptic
 
 
 record = check_record()
-baseprice = 100000
+baseprice = 200000
 # gaptick, baseprice = check_gaptick_baseprice()
 
 
@@ -359,10 +363,10 @@ while True:
             curtime = datetime.datetime.now()
             askprice1 = pyupbit.get_orderbook(ticker_input[0])['orderbook_units'][0]['ask_price']
             # rate_of_rise = round((current_price - target_price)/target_price * 100, 1)
-            # now_rsi = rsi(ticker_input[0], 14).iloc[-1]
+            now_rsi = rsi(ticker_input[0], 14).iloc[-2]
 
 
-            if buyflag and buying_flag1 and buying_flag2 and (current_price <= yesterday_close) and (krw >=5000) :
+            if buyflag and buying_flag1 and buying_flag2 and (current_price <= yesterday_close) and now_rsi < 70 and (krw >=5000) :
                 
                 print("가즈아아아!~~~")
                 
@@ -424,10 +428,15 @@ while True:
             curtime = datetime.datetime.now()
             askprice2 = pyupbit.get_orderbook(ticker_input[0])['orderbook_units'][0]['ask_price']
             # rate_of_rise = round((current_price - target_price)/target_price * 100, 1)
-            # now_rsi = rsi(ticker_input[0], 14).iloc[-1]
+            now_rsi = rsi(ticker_input[0], 14).iloc[-2]
+            avaTicker = 'KRW-' + myval[1]['currency']
 
 
-            if buyflag and buying_flag1 and buying_flag2 and (current_price <= yesterday_close) and (krw >=5000) :
+            if ticker_input[0] == avaTicker:
+                buyflag = False
+
+
+            if buyflag and buying_flag1 and buying_flag2 and (current_price <= yesterday_close) and now_rsi < 70 and (krw >=5000) :
                 
                 print("가즈아아아!~~~")
                 
@@ -495,12 +504,15 @@ while True:
                 sellsubamount = round(baseprice / sellsubprice, 8)
                 ret = upbit.sell_limit_order(avaTicker, sellsubprice, sellsubamount)
                 print(ret)
+                
                 record.append([ret['uuid'], datetime.datetime.now(), avaTicker, pyupbit.get_current_price(avaTicker), baseprice, gaptick, sellsubprice,'추가 거미줄매도'])
                 record.remove(item) # 거래가 된 거미줄매매는 rocord에서 삭제
                 delete_trade() # 엑셀에 있는 기록을 삭제
                 write_record(record) # update된 record를 엑셀에 저장
-                krw = upbit.get_balance()
-                write_trade(ret, krw)
+                
+                # trade = upbit.get_order(item[0])
+                # krw = upbit.get_balance()
+                # write_trade(trade, krw)
 
             elif upbit.get_order(item[0])['side'] == 'ask' and upbit.get_order(item[0])['state'] == 'done':
                 avaTicker = item[2]
@@ -513,8 +525,11 @@ while True:
                 record.remove(item)
                 delete_trade()
                 write_record(record)
-                krw = upbit.get_balance()
-                write_trade(ret, krw)
+                
+                # trade = upbit.get_order(item[0])
+                # krw = upbit.get_balance()
+                # write_trade(trade, krw)
+
             time.sleep(0.5)
                 
             
